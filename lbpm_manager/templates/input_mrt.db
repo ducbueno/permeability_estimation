@@ -1,0 +1,28 @@
+Domain {
+    ReadType = "8bit"
+    nproc = 1, 1, 1
+    BC = 0
+    ReadValues = 0, 1
+    WriteValues = 0, 1
+    voxel_length = VL
+    N = SAMPLE_SIZE
+    n = SUBDOMAIN_SIZE
+    offset = 0, 0, 0
+    Filename = "domain.raw"
+    InletLayers = 0,0,10
+    OutletLayers = 0,0,10
+}
+MRT {
+    F = FORCE
+    timestepMax = TSMAX
+    tolerance = TOL
+    tau = TAU
+}
+Visualization {
+    write_silo = true
+    save_pressure = true
+    save_velocity = true
+}
+Analysis {
+    analysis_interval = ANALYSIS_INTERVAL
+}

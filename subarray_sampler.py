@@ -55,24 +55,29 @@ class SubarraySampler:
             slices = tuple(slice(c - h, c + h) for c, h in zip(center, half_sub_dims))
             yield self.array[slices]
 
-    def sample(self, length: int):
+    def sample(self, dims):
         """Sample subarrays in a deterministic way.
 
         Args:
-            length: Size of each dimension in the subarray samples
+            dim: Either a single integer for cubic samples (length, length, length),
+                or a tuple of 3 integers for custom dimensions (x, y, z)
 
         Yields:
-            np.ndarray: Subarray samples of shape (length, length, length)
+            Tuple containing:
+                - np.ndarray: Subarray sample of shape determined by length parameter
+                - np.ndarray: Starting position of the sample in the original array
         """
-        full_dims = np.array(self.array.shape)
+        if isinstance(dims, int):
+            dims = (dims, dims, dims)
 
-        samples_per_dim = full_dims // length
+        full_dims = np.array(self.array.shape)
+        samples_per_dim = full_dims // dims
 
         start_points = np.array(
             np.meshgrid(
-                np.arange(0, samples_per_dim[0] * length, length),
-                np.arange(0, samples_per_dim[1] * length, length),
-                np.arange(0, samples_per_dim[2] * length, length),
+                np.arange(0, samples_per_dim[0] * dims[0], dims[0]),
+                np.arange(0, samples_per_dim[1] * dims[1], dims[1]),
+                np.arange(0, samples_per_dim[2] * dims[2], dims[2]),
                 indexing="ij",
             )
         )
@@ -80,5 +85,5 @@ class SubarraySampler:
         start_points = start_points.reshape(3, -1).T
 
         for start in start_points:
-            slices = tuple(slice(s, s + length) for s in start)
+            slices = tuple(slice(s, s + dim) for s, dim in zip(start, dims))
             yield self.array[slices], start

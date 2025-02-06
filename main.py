@@ -2,9 +2,9 @@ from pathlib import Path
 
 import numpy as np
 
-from features.extractor import FeatureExtractor
-from models.permeability_predictor import PermeabilityPredictor
-from models.rock_type_classifier import RockTypeClassifier
+from data_driven.features.extractor import FeatureExtractor
+from data_driven.models.permeability_predictor import PermeabilityPredictor
+from data_driven.models.rock_type_classifier import RockTypeClassifier
 from subarray_sampler import SubarraySampler
 
 BASE_SAMPLE = "./data/samples/P01_vs8um_segmented_1488x1340x1200.raw"
