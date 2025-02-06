@@ -18,6 +18,8 @@ def ct2porosity(sample_path, ctn_brine=231.29, ctn_n2=-872.5, save=False):
 
 
 def cubify_voxels(sample_path, dtype, save=False):
+    if isinstance(dtype, str):
+        dtype = TYPE_MAP[dtype]
     sample = np.fromfile(sample_path, dtype=dtype)
 
     if not (dims_match := re.search(r"(\d+)x(\d+)x(\d+)", sample_path.name)):

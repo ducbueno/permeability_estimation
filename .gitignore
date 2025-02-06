@@ -10,3 +10,5 @@ wheels/
 .venv
 data
 lbpm_manager/logs
+uv.lock
+uv.lock

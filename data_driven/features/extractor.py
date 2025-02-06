@@ -8,8 +8,9 @@ from scipy.stats import kurtosis, skew
 from subarray_sampler import SubarraySampler
 
 sys.path.append("../lbpm_manager/")
-from lbpm_manager import LBPMManager  # pyright: ignore
 from quantimpy import minkowski as mk  # pyright: ignore
+
+from lbpm_manager import LBPMManager  # pyright: ignore
 
 
 class FeatureExtractor:
@@ -118,7 +119,7 @@ class FeatureExtractor:
     def _extract_features_inference(self, length=128):
         features_list = []
 
-        for subarray, origin in self.sampler.sample(length=length):
+        for subarray, origin in self.sampler.sample(dims=length):
             features = {"subdomain_origin": origin}
 
             for axis, direction in self.directions.items():

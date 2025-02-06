@@ -5,12 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "h5py>=3.12.1",
+    "ipython>=8.32.0",
     "kneed>=0.8.5",
     "matplotlib==3.8.2",
     "numpy==1.26.0",
     "polars==0.20.13",
     "pyqt5>=5.15.11",
+    "pyvista>=0.44.2",
     "quantimpy>=0.2.6",
+    "scikit-image>=0.25.1",
     "scikit-learn>=1.5.2",
     "scipy==1.11.4",
     "seaborn>=0.13.2",
