@@ -2,6 +2,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import h5py
 import numpy as np
 import polars as pl
 
@@ -25,7 +26,7 @@ class LBPMManager:
         self.template_path = script_dir / "templates" / f"input_{self.protocol}.db"
 
     def _assemble_input(self, domain):
-        sample_size_str = ", ".join(map(str, reversed(domain.shape)))
+        sample_size_str = ", ".join(map(str, domain.shape))
         force_str = ", ".join(map(str, self.force))
 
         with (
@@ -57,6 +58,23 @@ class LBPMManager:
                 check=True,
                 text=True,
             )
+
+    def _get_velocity_fields(self):
+        vis_path = next(self.work_dir.glob("vis*"), None)
+        if vis_path and vis_path.is_dir():
+            silo_path = vis_path / "00000.silo"
+
+            if silo_path.is_file():
+                print(f"Found file: {silo_path}")
+
+                with h5py.File(silo_path, "r") as f:
+                    return {
+                        "Velocity_x": np.array(f[f["Velocity_x"].attrs["silo"][1]]),
+                        "Velocity_y": np.array(f[f["Velocity_y"].attrs["silo"][1]]),
+                        "Velocity_z": np.array(f[f["Velocity_z"].attrs["silo"][1]]),
+                    }
+        else:
+            print("No directory 'vis' was found.")
 
     def run_simulation(self, domain):
         self.work_dir.mkdir(exist_ok=True)
@@ -106,6 +124,11 @@ class LBPMManager:
             .item()
         )
 
+        velocity_fields = self._get_velocity_fields()
+
         shutil.rmtree(self.work_dir)
 
-        return {"lbpm_porosity": lbpm_porosity, "permeability": permeability}
+        return {
+            "lbpm_porosity": lbpm_porosity,
+            "permeability": permeability,
+        } | velocity_fields
