@@ -1,3 +1,13 @@
+"""Computes permeability maps for porous media samples using velocity field data.
+
+This module processes 3D voxel data of porous media samples to calculate permeability
+maps along different axes. It combines geometric properties of the pore space with
+velocity field data from LBPM simulations to generate weighted permeability maps.
+
+Typical usage example:
+    python -m velocity_field sample.raw
+"""
+
 import sys
 from pathlib import Path
 
@@ -12,6 +22,19 @@ from subarray_sampler import SubarraySampler
 
 
 def _get_slice_permeability_map(slc):
+    """Calculates the permeability map for a 2D slice of porous media.
+
+    Uses pore geometry and connectivity to compute local permeability values
+    based on shape factors and hydraulic diameters.
+
+    Args:
+        slc: numpy.ndarray
+            A 2D binary array representing a slice of porous media.
+
+    Returns:
+        numpy.ndarray
+            A 2D array of float values representing the permeability map.
+    """
     slice_porosity = np.count_nonzero(slc) / slc.size
     connectivity_kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
     labeled_pores, _ = label(slc, structure=connectivity_kernel)
@@ -30,6 +53,21 @@ def _get_slice_permeability_map(slc):
 
 
 def get_permeability_map(sample, axis):
+    """Generates a 3D permeability map along a specified axis.
+
+    Computes permeability maps for each 2D slice perpendicular to the given axis
+    and combines them into a 3D array.
+
+    Args:
+        sample: numpy.ndarray
+            3D binary array representing the porous media sample.
+        axis: int
+            Axis along which to compute the permeability (0: z, 1: x, 2: y).
+
+    Returns:
+        numpy.ndarray
+            3D array containing permeability values.
+    """
     permeability_map = np.zeros_like(sample, dtype=float)
     for i in range(sample.shape[axis]):
         slc = np.take(sample, i, axis=axis)
@@ -41,14 +79,25 @@ def get_permeability_map(sample, axis):
 
 
 def main():
+    """Main execution function.
+
+    Processes a binary voxel file to compute directional permeability maps weighted
+    by velocity field data. Saves the resulting permeability maps as raw binary files.
+
+    Command line arguments:
+        sys.argv[1]: Path to the input voxel file.
+
+    Outputs:
+        Creates binary files containing permeability maps for x, y, and z directions
+        in the 'data/velocity_field/outputs' directory.
+    """
     sample_path = Path(sys.argv[1])
     sample = cubify_voxels(sample_path, dtype=np.uint8)
     sampler = SubarraySampler(sample)
     mgr = LBPMManager(vl=100.0)
 
-    pondered_perm_x_list = []
-    pondered_perm_y_list = []
-    pondered_perm_z_list = []
+    output_dir = Path("data/velocity_field/outputs")
+    output_dir.mkdir(exist_ok=True)
 
     for i, (subarray, _) in enumerate(
         sampler.sample((sample.shape[0] // 20, sample.shape[1], sample.shape[2]))
@@ -74,20 +123,15 @@ def main():
         pondered_perm_y = perm_y * vy_norm
         pondered_perm_z = perm_z * vz_norm
 
-        pondered_perm_x_list.append(pondered_perm_x)
-        pondered_perm_y_list.append(pondered_perm_y)
-        pondered_perm_z_list.append(pondered_perm_z)
-
-    final_perm_x = np.concatenate(pondered_perm_x_list, axis=0)
-    final_perm_y = np.concatenate(pondered_perm_y_list, axis=0)
-    final_perm_z = np.concatenate(pondered_perm_z_list, axis=0)
-
-    output_dir = Path("data/velocity_field/outputs")
-    output_dir.mkdir(exist_ok=True)
-
-    final_perm_x.tofile(output_dir / f"{sample_path.stem}_permeability_x.raw")
-    final_perm_y.tofile(output_dir / f"{sample_path.stem}_permeability_y.raw")
-    final_perm_z.tofile(output_dir / f"{sample_path.stem}_permeability_z.raw")
+        pondered_perm_x.tofile(
+            output_dir / f"{sample_path.stem}_permeability_x_{i}.raw"
+        )
+        pondered_perm_y.tofile(
+            output_dir / f"{sample_path.stem}_permeability_y_{i}.raw"
+        )
+        pondered_perm_z.tofile(
+            output_dir / f"{sample_path.stem}_permeability_z_{i}.raw"
+        )
 
 
 if __name__ == "__main__":
